@@ -1,0 +1,24 @@
+[DEFAULT]
+
+db_path = ~/.feed2mail.db
+
+smtp_host = SMTPHOST
+smtp_port = 25
+
+from = FROM@FROM.COM
+to = TO@TO.COM
+
+pandoc_path = /usr/bin/pandoc
+
+# 
+# The feeds
+#
+
+[Fefe]
+url = http://blog.fefe.de/rss.xml?html
+
+[Hack a Day]
+url = http://feeds2.feedburner.com/hackaday/LgoM
+
+[Schneier]
+url = http://www.schneier.com/blog/index.rdf

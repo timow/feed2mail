@@ -1,0 +1,126 @@
+#!/usr/bin/python
+
+import argparse, ConfigParser, feedparser
+import logging, os, smtplib, subprocess, sys, yaml
+from email.mime.text import MIMEText
+
+def load_config(path):
+    global config
+    config = ConfigParser.SafeConfigParser()
+    read_config = config.read([path])
+
+    if len(read_config) != 1:
+        logging.critical('couldn\'t read config file \'%s\'', path)
+        raise Exception('couldn\'t read config file \'%s\'' % path)
+
+    logging.debug('using config file \'%s\'', read_config[0])
+
+def load_database():
+    global db
+    path = config.get('DEFAULT', 'db_path')
+    try:
+        f = open(os.path.expanduser(path), 'r')
+        db = yaml.load(f)
+        f.close()
+    except:
+        logging.warning('couldn\'t read database file')
+        db = {}
+
+def save_database():
+    path = config.get('DEFAULT', 'db_path')
+    try:
+        f = open(os.path.expanduser(path), 'w')
+        yaml.dump(db, f, default_flow_style = False)
+        f.close()
+    except:
+        logging.critical('couldn\'t write database file')
+        raise Exception('couldn\'t write database file')
+
+def send_mail(feed_id, msg):
+    # TODO check whether feed overrides defaults
+    sender = config.get('DEFAULT', 'from')
+    receiver = config.get('DEFAULT', 'to')
+    host = config.get('DEFAULT', 'smtp_host')
+    port = config.get('DEFAULT', 'smtp_port')
+
+#    s = smtplib.SMTP(host = host, port = port)
+#    s.sendmail(sender, receiver, msg.as_string())
+#    s.quit()
+
+def markdown(html):
+    p = subprocess.Popen([config.get('DEFAULT', 'pandoc_path'),
+        '--from=html',
+        '--to=markdown'],
+            stdin = subprocess.PIPE,
+            stdout = subprocess.PIPE,
+            stderr = subprocess.PIPE)
+
+    return p.communicate(html.encode('utf-8'))
+
+def new_feed_entries(feed):
+    for e in feed.entries:
+        # TODO check whether entry was seen already
+        yield e
+
+def remember_seen_entry(feed_id, feed, entry):
+    # TODO save db
+    return
+
+def mail(feed_id, feed, entry):
+    # TODO check whether feed overrides defaults
+    sender = config.get('DEFAULT', 'from')
+    receiver = config.get('DEFAULT', 'to')
+
+    text = feed['feed']['title'].encode('utf-8')
+
+    if entry.has_key('author'):
+        text += " / " + entry['author'].encode('utf-8')
+        
+    text += "\r\n"*2 + markdown(entry['summary'])[0] + "\r\n" + \
+            entry['link'].encode('utf-8')
+
+    msg = MIMEText(text, _charset = 'utf-8')
+    msg["Subject"] = "[%s] %s" % (feed_id, entry['title'])
+
+    msg["From"] = sender
+    msg["To"] = receiver
+
+    return msg
+
+if __name__ == '__main__':
+    # parse cmd line
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('--log',
+        help = 'log level (debug, info, warning, error, critical)')
+    arg_parser.add_argument('--config', help = 'path to config file')
+    args = arg_parser.parse_args()
+
+    # configure logging
+    numeric_log_level = getattr(logging,
+        args.log.upper() if args.log else "INFO", None)
+    logging.basicConfig(format = '%(levelname)s: %(message)s',
+        level = numeric_log_level)
+
+    try:
+        # load config
+        load_config(args.config \
+            if args.config 
+            else os.path.expanduser('~/.feed2mailrc'))
+
+        # load database
+        load_database()
+    except:
+        sys.exit(1)
+
+    # fetch and mail new entries of all feeds
+    for feed_id in config.sections():
+        logging.info('parsing feed \'%s\'', feed_id)
+        feed = feedparser.parse(config.get(feed_id, 'url'))
+
+        status = feed['status']
+        if status / 100 == 4:
+            logging.error('feed \'%s\' returned status code %s', feed_id, status)
+        else:
+            logging.debug('feed \'%s\' returned status code %s', feed_id, status)
+            for entry in new_feed_entries(feed):
+                send_mail(feed_id, mail(feed_id, feed, entry))
