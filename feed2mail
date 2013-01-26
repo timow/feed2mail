@@ -43,9 +43,9 @@ def send_mail(feed_id, msg):
     host = config.get('DEFAULT', 'smtp_host')
     port = config.get('DEFAULT', 'smtp_port')
 
-#    s = smtplib.SMTP(host = host, port = port)
-#    s.sendmail(sender, receiver, msg.as_string())
-#    s.quit()
+    s = smtplib.SMTP(host = host, port = port)
+    s.sendmail(sender, receiver, msg.as_string())
+    s.quit()
 
 def markdown(html):
     p = subprocess.Popen([config.get('DEFAULT', 'pandoc_path'),
