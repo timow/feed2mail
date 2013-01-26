@@ -20,7 +20,7 @@ def load_database():
     path = config.get('DEFAULT', 'db_path')
     try:
         f = open(os.path.expanduser(path), 'r')
-        db = yaml.load(f)
+        db = yaml.safe_load(f)
         f.close()
     except:
         logging.warning('couldn\'t read database file')
