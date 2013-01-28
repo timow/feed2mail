@@ -83,8 +83,8 @@ def remember_entries(feed_id, feed):
     db[feed_id] = {}
 
     if not feed.has_key('updated_parsed'):
-        logging.error('feed \'%s\' has no attribute \'updated\'', feed_id)
-        return
+        feed.updated_parsed = time.gmtime()
+        # TODO eliminate side effect
 
     for entry in feed.entries:
         if not entry.has_key('id'):
