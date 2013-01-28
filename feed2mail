@@ -59,7 +59,11 @@ def markdown(html):
 
 def new_feed_entries(feed_id, feed):
     for entry in feed.entries:
+        if not entry.has_key('id'):
+            logging.error('feed \'%s\' has entries without attribute \'id\'', feed_id)
+            return
         entry_id = str(entry.id)
+
         # new feed?
         if not db.has_key(feed_id):
             yield entry
@@ -83,6 +87,8 @@ def remember_entries(feed_id, feed):
         return
 
     for entry in feed.entries:
+        if not entry.has_key('id'):
+            continue
         db[feed_id][str(entry.id)] = \
             datetime.datetime.fromtimestamp(time.mktime(
                 entry.updated_parsed if entry.has_key('updated_parsed')
