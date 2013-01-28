@@ -11,16 +11,25 @@ Requirements
 - python         (tested with version 2.6.6)
 - further python modules
     - argparse   (tested with version 1.1)
-    - feedparser (tested with version 4.1)
+    - feedparser (tested with version 5.1.3)
     - yaml       (tested with version 3.09)
+
+
+Note that feed2mail needs a recent version of feedparser. The version available
+as a Debian package is not sufficient (as it does not provide 'updated_parsed'
+attributes).
 
 On Debian, the following command installs all required components
 
     aptitude install pandoc \
         python \
         python-argparse \
-        python-feedparser \
         python-yaml
+
+    wget http://feedparser.googlecode.com/files/feedparser-5.1.3.tar.bz2
+    tar xaf feedparser-5.1.3.tar.bz2
+    cd feedparser-5.1.3
+    python setup.py install
 
 
 Installation
