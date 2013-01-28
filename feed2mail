@@ -106,8 +106,13 @@ def mail(feed_id, feed, entry):
 
     if entry.has_key('author'):
         text += " / " + entry['author'].encode('utf-8')
+
+    md_summary = markdown(entry.summary)
+
+    if bool(md_summary[1]):
+        logging.error(md_summary[1])
         
-    text += "\r\n"*2 + markdown(entry['summary'])[0] + "\r\n" + \
+    text += "\r\n"*2 + md_summary[0] + "\r\n" + \
             entry['link'].encode('utf-8')
 
     msg = MIMEText(text, _charset = 'utf-8')
