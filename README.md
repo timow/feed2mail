@@ -14,6 +14,11 @@ Requirements
     - feedparser (tested with version 5.1.3)
     - yaml       (tested with version 3.09)
 
+Older versions of pandoc have an [encoding bug](http://code.google.com/p/pandoc/issues/detail?id=233).
+Update to a recent version of pandoc or set the $LANG environment variable to
+UTF-8.
+
+    LANG=en_US.utf8; export LANG
 
 Note that feed2mail needs a recent version of feedparser. The version available
 as a Debian package is not sufficient (as it does not provide 'updated_parsed'
