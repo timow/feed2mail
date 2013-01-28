@@ -105,7 +105,7 @@ def mail(feed_id, feed, entry):
     text = feed['feed']['title'].encode('utf-8')
 
     if entry.has_key('author'):
-        text += " / " + entry['author'].encode('utf-8')
+        text += " / " + entry.author.encode('utf-8')
 
     md_summary = markdown(entry.summary)
 
@@ -113,10 +113,10 @@ def mail(feed_id, feed, entry):
         logging.error(md_summary[1])
         
     text += "\r\n"*2 + md_summary[0] + "\r\n" + \
-            entry['link'].encode('utf-8')
+            entry.link.encode('utf-8')
 
     msg = MIMEText(text, _charset = 'utf-8')
-    msg["Subject"] = "[%s] %s" % (feed_id, entry['title'])
+    msg["Subject"] = "[%s] %s" % (feed_id, entry.title)
 
     msg["From"] = sender
     msg["To"] = receiver
@@ -153,11 +153,12 @@ if __name__ == '__main__':
         logging.info('parsing feed \'%s\'', feed_id)
         feed = feedparser.parse(config.get(feed_id, 'url'))
 
-        status = feed['status']
-        if status / 100 == 4:
-            logging.error('feed \'%s\' returned status code %s', feed_id, status)
+        if feed.status / 100 == 4:
+            logging.error('feed \'%s\' returned status code %s',
+                    feed_id, feed.status)
         else:
-            logging.debug('feed \'%s\' returned status code %s', feed_id, status)
+            logging.debug('feed \'%s\' returned status code %s',
+                    feed_id, feed.status)
             for entry in new_feed_entries(feed_id, feed):
                 send_mail(feed_id, mail(feed_id, feed, entry))
             remember_entries(feed_id, feed)
