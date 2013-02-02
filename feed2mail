@@ -169,6 +169,10 @@ if __name__ == '__main__':
         logging.info('parsing feed \'%s\'', feed_id)
         feed = feedparser.parse(config.get(feed_id, 'url'))
 
+        if feed == None or not feed.has_key('status'):
+            logging.error('couldn\'t fetch feed \'%s\'', feed_id)
+            continue
+
         if feed.status / 100 == 4:
             logging.error('feed \'%s\' returned status code %s',
                     feed_id, feed.status)
