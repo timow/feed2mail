@@ -89,9 +89,10 @@ def new_feed_entries(feed_id, feed):
 def remember_entries(feed_id, feed):
     db[feed_id] = {}
 
-    if not feed.has_key('updated_parsed'):
-        feed.updated_parsed = time.gmtime()
-        # TODO eliminate side effect
+    if feed.has_key('updated_parsed'):
+        fallback_timestamp = feed.updated_parsed
+    else:
+        fallback_timestamp = time.gmtime()
 
     for entry in feed.entries:
         eid = entry_id(entry)
@@ -99,7 +100,7 @@ def remember_entries(feed_id, feed):
             continue
         db[feed_id][eid] = datetime.datetime.fromtimestamp(time.mktime(
                 entry.updated_parsed if entry.has_key('updated_parsed')
-                else feed.updated_parsed
+                else fallback_timestamp
             )).isoformat()
 
     save_database()
