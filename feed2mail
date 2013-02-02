@@ -57,25 +57,32 @@ def markdown(html):
 
     return p.communicate(html.encode('utf-8'))
 
+def entry_id(entry):
+    if not entry.has_key('id') and not entry.has_key('link'):
+        return None
+    return str(entry.id) if entry.has_key('id') else str(entry.link)
+
 def new_feed_entries(feed_id, feed):
     for entry in feed.entries:
-        if not entry.has_key('id'):
-            logging.error('feed \'%s\' has entries without attribute \'id\'', feed_id)
-            return
-        entry_id = str(entry.id)
+        eid = entry_id(entry)
+
+        if not eid:
+            logging.error('feed \'%s\' has entries without id and link',
+                    feed_id)
+            continue
 
         # new feed?
         if not db.has_key(feed_id):
             yield entry
         # new entry?
-        elif not db[feed_id].has_key(entry_id):
+        elif not db[feed_id].has_key(eid):
             yield entry
         # entry updated?
         elif entry.has_key('updated_parsed'):
             last_updated = datetime.datetime.fromtimestamp(
                 time.mktime(entry.updated_parsed))
             last_seen = datetime.datetime.strptime(
-                db[feed_id][entry_id], "%Y-%m-%dT%H:%M:%S")
+                db[feed_id][eid], "%Y-%m-%dT%H:%M:%S")
             if last_seen < last_updated:
                 yield entry
 
@@ -87,10 +94,10 @@ def remember_entries(feed_id, feed):
         # TODO eliminate side effect
 
     for entry in feed.entries:
-        if not entry.has_key('id'):
+        eid = entry_id(entry)
+        if not eid:
             continue
-        db[feed_id][str(entry.id)] = \
-            datetime.datetime.fromtimestamp(time.mktime(
+        db[feed_id][eid] = datetime.datetime.fromtimestamp(time.mktime(
                 entry.updated_parsed if entry.has_key('updated_parsed')
                 else feed.updated_parsed
             )).isoformat()
