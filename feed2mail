@@ -130,9 +130,9 @@ def mail(feed_id, feed, entry):
     msg = MIMEText(text, _charset = 'utf-8')
 
     if entry.has_key('title'):
-        msg["Subject"] = "[%s] %s" % (feed_id, entry.title)
+        msg["Subject"] = "[%s] %s" % (feed_id.encode('utf-8'), entry.title.encode('utf-8'))
     else:
-        msg["Subject"] = "[%s] New feed" % (feed_id)
+        msg["Subject"] = "[%s] New feed" % (feed_id.encode('utf-8'))
 
     msg["From"] = sender
     msg["To"] = receiver
