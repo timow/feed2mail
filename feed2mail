@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import argparse, ConfigParser, datetime, feedparser
-import logging, os, smtplib, subprocess, sys, time, yaml
+import argparse, ConfigParser, feedparser, hashlib, HTMLParser
+import logging, os, smtplib, subprocess, sys, yaml
 from email.mime.text import MIMEText
 
 def load_config(path):
@@ -62,6 +62,9 @@ def entry_id(entry):
         return None
     return str(entry.id) if entry.has_key('id') else str(entry.link)
 
+def checksum(msg):
+    return hashlib.md5(str(msg)).hexdigest()
+
 def new_feed_entries(feed_id, feed):
     for entry in feed.entries:
         eid = entry_id(entry)
@@ -78,46 +81,28 @@ def new_feed_entries(feed_id, feed):
         elif not db[feed_id].has_key(eid):
             yield entry
         # entry updated?
-        elif entry.has_key('updated_parsed'):
-            last_updated = datetime.datetime.fromtimestamp(
-                time.mktime(entry.updated_parsed))
-            last_seen = datetime.datetime.strptime(
-                db[feed_id][eid], "%Y-%m-%dT%H:%M:%S")
-            if last_seen < last_updated:
+        else:
+            old_checksum = db[feed_id][eid]
+            current_checksum = checksum(mail_body(feed, entry))
+
+            if current_checksum != old_checksum:
+                logging.debug('changed entry %s (old chksum: %s, new chksum %s)',
+                        eid, old_checksum, current_checksum)
                 yield entry
 
 def remember_entries(feed_id, feed):
     db[feed_id] = {}
-
-    if feed.has_key('updated_parsed'):
-        fallback_timestamp = feed.updated_parsed
-    elif feed.has_key('published_parsed'):
-        fallback_timestamp = feed.published_parsed
-    else:
-        fallback_timestamp = time.gmtime()
 
     for entry in feed.entries:
         eid = entry_id(entry)
         if not eid:
             continue
 
-        if entry.has_key('updated_parsed'):
-            entry_timestamp = entry.updated_parsed
-        elif entry.has_key('published_parsed'):
-            entry_timestamp = entry.published_parsed
-        else:
-            entry_timestamp = fallback_timestamp
-
-        db[feed_id][eid] = datetime.datetime.fromtimestamp(
-                time.mktime(entry_timestamp)).isoformat()
+        db[feed_id][eid] = checksum(mail_body(feed, entry))
 
     save_database()
 
-def mail(feed_id, feed, entry):
-    # TODO check whether feed overrides defaults
-    sender = config.get('DEFAULT', 'from')
-    receiver = config.get('DEFAULT', 'to')
-
+def mail_body(feed, entry):
     text = feed.feed.title.encode('utf-8') \
             if feed.has_key('feed') and feed.feed.has_key('title') \
             else "".encode('utf-8')
@@ -135,7 +120,13 @@ def mail(feed_id, feed, entry):
     if entry.has_key('link'):
         text += "\r\n" + entry.link.encode('utf-8')
 
-    msg = MIMEText(text, _charset = 'utf-8')
+
+def mail(feed_id, feed, entry):
+    # TODO check whether feed overrides defaults
+    sender = config.get('DEFAULT', 'from')
+    receiver = config.get('DEFAULT', 'to')
+
+    msg = MIMEText(mail_body(feed, entry), _charset = 'utf-8')
 
     if entry.has_key('title'):
         msg["Subject"] = "[%s] %s" % (feed_id.encode('utf-8'), entry.title.encode('utf-8'))
