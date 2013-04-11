@@ -166,18 +166,22 @@ if __name__ == '__main__':
     # fetch and mail new entries of all feeds
     for feed_id in config.sections():
         logging.info('parsing feed \'%s\'', feed_id)
-        feed = feedparser.parse(config.get(feed_id, 'url'))
+        try:
+            feed = feedparser.parse(config.get(feed_id, 'url'))
+        
+            if feed == None or not feed.has_key('status'):
+                logging.error('couldn\'t fetch feed \'%s\'', feed_id)
+                continue
 
-        if feed == None or not feed.has_key('status'):
-            logging.error('couldn\'t fetch feed \'%s\'', feed_id)
-            continue
-
-        if feed.status / 100 == 4:
-            logging.error('feed \'%s\' returned status code %s',
-                    feed_id, feed.status)
-        else:
-            logging.debug('feed \'%s\' returned status code %s',
-                    feed_id, feed.status)
-            for entry in new_feed_entries(feed_id, feed):
-                send_mail(feed_id, mail(feed_id, feed, entry))
-            remember_entries(feed_id, feed)
+            if feed.status / 100 == 4:
+                logging.error('feed \'%s\' returned status code %s',
+                        feed_id, feed.status)
+            else:
+                logging.debug('feed \'%s\' returned status code %s',
+                        feed_id, feed.status)
+                for entry in new_feed_entries(feed_id, feed):
+                    send_mail(feed_id, mail(feed_id, feed, entry))
+                remember_entries(feed_id, feed)
+        except HTMLParser.HTMLParseError as e:
+            logging.info('error while parsing feed \'%s\': %s',
+                    feed_id, str(e))
