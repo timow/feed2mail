@@ -91,6 +91,8 @@ def remember_entries(feed_id, feed):
 
     if feed.has_key('updated_parsed'):
         fallback_timestamp = feed.updated_parsed
+    elif feed.has_key('published_parsed'):
+        fallback_timestamp = feed.published_parsed
     else:
         fallback_timestamp = time.gmtime()
 
@@ -98,10 +100,16 @@ def remember_entries(feed_id, feed):
         eid = entry_id(entry)
         if not eid:
             continue
-        db[feed_id][eid] = datetime.datetime.fromtimestamp(time.mktime(
-                entry.updated_parsed if entry.has_key('updated_parsed')
-                else fallback_timestamp
-            )).isoformat()
+
+        if entry.has_key('updated_parsed'):
+            entry_timestamp = entry.updated_parsed
+        elif entry.has_key('published_parsed'):
+            entry_timestamp = entry.published_parsed
+        else:
+            entry_timestamp = fallback_timestamp
+
+        db[feed_id][eid] = datetime.datetime.fromtimestamp(
+                time.mktime(entry_timestamp)).isoformat()
 
     save_database()
 
