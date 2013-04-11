@@ -120,6 +120,7 @@ def mail_body(feed, entry):
     if entry.has_key('link'):
         text += "\r\n" + entry.link.encode('utf-8')
 
+    return text
 
 def mail(feed_id, feed, entry):
     # TODO check whether feed overrides defaults
