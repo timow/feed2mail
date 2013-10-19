@@ -37,11 +37,10 @@ def save_database():
         raise Exception('couldn\'t write database file')
 
 def send_mail(feed_id, msg):
-    # TODO check whether feed overrides defaults
-    sender = config.get('DEFAULT', 'from')
-    receiver = config.get('DEFAULT', 'to')
-    host = config.get('DEFAULT', 'smtp_host')
-    port = config.get('DEFAULT', 'smtp_port')
+    sender = config.get(feed_id, 'from')
+    receiver = config.get(feed_id, 'to')
+    host = config.get(feed_id, 'smtp_host')
+    port = config.get(feed_id, 'smtp_port')
 
     s = smtplib.SMTP(host = host, port = port)
     s.sendmail(sender, receiver, msg.as_string())
@@ -123,9 +122,8 @@ def mail_body(feed, entry):
     return text
 
 def mail(feed_id, feed, entry):
-    # TODO check whether feed overrides defaults
-    sender = config.get('DEFAULT', 'from')
-    receiver = config.get('DEFAULT', 'to')
+    sender = config.get(feed_id, 'from')
+    receiver = config.get(feed_id, 'to')
 
     msg = MIMEText(mail_body(feed, entry), _charset = 'utf-8')
 
