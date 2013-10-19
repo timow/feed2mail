@@ -10,6 +10,8 @@ to = TO@TO.COM
 
 pandoc_path = /usr/bin/pandoc
 
+check_updated_entries = True
+
 # 
 # The feeds
 #
@@ -19,6 +21,7 @@ url = http://blog.fefe.de/rss.xml?html
 
 [Hack a Day]
 url = http://feeds2.feedburner.com/hackaday/LgoM
+check_updated_entries = False
 
 [Schneier]
 url = http://www.schneier.com/blog/index.rdf

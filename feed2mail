@@ -80,7 +80,7 @@ def new_feed_entries(feed_id, feed):
         elif not db[feed_id].has_key(eid):
             yield entry
         # entry updated?
-        else:
+        elif config.getboolean(feed_id, 'check_updated_entries'):
             old_checksum = db[feed_id][eid]
             current_checksum = checksum(mail_body(feed, entry))
 
