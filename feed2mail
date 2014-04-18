@@ -172,15 +172,16 @@ if __name__ == '__main__':
                 logging.error('couldn\'t fetch feed \'%s\'', feed_id)
                 continue
 
-            if feed.status / 100 == 4:
-                logging.error('feed \'%s\' returned status code %s',
-                        feed_id, feed.status)
-            else:
-                logging.debug('feed \'%s\' returned status code %s',
-                        feed_id, feed.status)
+            logging.debug('feed \'%s\' returned status code %s',
+                    feed_id, feed.status)
+
+            if feed.status / 100 == 2:
                 for entry in new_feed_entries(feed_id, feed):
                     send_mail(feed_id, mail(feed_id, feed, entry))
                 remember_entries(feed_id, feed)
+            else:
+                logging.error('feed \'%s\' returned status code %s',
+                        feed_id, feed.status)
         except HTMLParser.HTMLParseError as e:
             logging.info('error while parsing feed \'%s\': %s',
                     feed_id, str(e))
