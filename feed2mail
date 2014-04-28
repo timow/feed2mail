@@ -59,7 +59,8 @@ def markdown(html):
 def entry_id(entry):
     if not entry.has_key('id') and not entry.has_key('link'):
         return None
-    return str(entry.id) if entry.has_key('id') else str(entry.link)
+    return entry.id.encode('utf-8') if entry.has_key('id') else \
+            entry.link.encode('utf-8')
 
 def checksum(msg):
     return hashlib.md5(str(msg)).hexdigest()
@@ -109,7 +110,8 @@ def mail_body(feed, entry):
     if entry.has_key('author'):
         text += " / " + entry.author.encode('utf-8')
 
-    md_summary = markdown(entry.summary if entry.has_key('summary') else '')
+    md_summary = markdown(entry.summary.encode('utf-8')) if \
+            entry.has_key('summary') else '')
 
     if bool(md_summary[1]):
         logging.error(md_summary[1])
