@@ -111,7 +111,7 @@ def mail_body(feed, entry):
         text += " / " + entry.author.encode('utf-8')
 
     md_summary = markdown(entry.summary.encode('utf-8')) if \
-            entry.has_key('summary') else '')
+            entry.has_key('summary') else ''
 
     if bool(md_summary[1]):
         logging.error(md_summary[1])
